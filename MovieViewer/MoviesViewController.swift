@@ -48,18 +48,21 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         
         searchBar.delegate = self
         
+        tableView.backgroundColor = UIColor.darkGrayColor()
+        
         networkRequest()
-        
-        
-        
-        // Do any additional setup after loading the view.
+
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
+
     
+    @IBAction func hideKeyboardTap(sender: AnyObject) {
+        searchBar.endEditing(true)
+    }
     
     // MARK: For default table
     
@@ -78,7 +81,6 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         let cell = tableView.dequeueReusableCellWithIdentifier("MovieCell", forIndexPath: indexPath) as! MovieCell
         
         let movie = movies![indexPath.row]
-        let title = movie["title"] as! String
         let overview = movie["overview"] as! String
         let posterPath = movie["poster_path"] as! String
         
@@ -101,16 +103,16 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         
     }
     
-//    func dataOrganizer(title: String, overview: String, posterPath: String) {
-//        
-//        data.append(title)
-//        filteredData = data
-//        print("Data count: \(data.count)")
-//        print("Filtered data count: \(filteredData?.count)")
-//        
-//    }
+    func searchBarCancelButtonClicked(searchBar: UISearchBar) {
+        searchBar.setShowsCancelButton(false, animated: true)
+        searchBar.endEditing(true)
+        searchBar.resignFirstResponder()
+    }
     
     func searchBar(searchBar: UISearchBar, textDidChange searchText: String) {
+        
+        searchBar.setShowsCancelButton(true, animated: true)
+
         filteredData = searchText.isEmpty ? movieData : movieData.filter({(dataString: String) -> Bool in
             return dataString.rangeOfString(searchText, options: .CaseInsensitiveSearch) != nil
         })
