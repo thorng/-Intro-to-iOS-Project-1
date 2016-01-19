@@ -13,13 +13,24 @@ import MBProgressHUD
 class MoviesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
     @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var networkErrorView: UIView!
     
     var movies: [NSDictionary]?
     
+    // Change status bar text to white
+    override func preferredStatusBarStyle() -> UIStatusBarStyle {
+        return .LightContent
+    }
+    
     override func viewDidLoad() {
+        
         super.viewDidLoad()
         
+        networkErrorView.hidden = true
+        
         let refreshControl = UIRefreshControl()
+        refreshControl.backgroundColor = UIColor.darkGrayColor()
+        refreshControl.tintColor = UIColor.whiteColor()
         refreshControl.addTarget(self, action: "refreshControlAction:", forControlEvents: UIControlEvents.ValueChanged)
         tableView.insertSubview(refreshControl, atIndex: 0)
 
@@ -88,6 +99,8 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
                     if let responseDictionary = try! NSJSONSerialization.JSONObjectWithData(
                         data, options:[]) as? NSDictionary {
                             
+                            self.networkErrorView.hidden = true
+                            
                             NSLog("response: \(responseDictionary)")
                             
                             self.movies = responseDictionary["results"] as! [NSDictionary]
@@ -97,6 +110,9 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
                             self.tableView.reloadData()
                         
                     }
+                } else {
+                    MBProgressHUD.hideHUDForView(self.view, animated: true)
+                    self.networkErrorView.hidden = false
                 }
         });
         task.resume()
