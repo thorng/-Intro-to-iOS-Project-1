@@ -10,12 +10,21 @@ import UIKit
 import AFNetworking
 import MBProgressHUD
 
-class MoviesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class MoviesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UISearchBarDelegate {
 
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var networkErrorView: UIView!
+    @IBOutlet weak var searchBar: UISearchBar!
     
     var movies: [NSDictionary]?
+    
+    var movieData: [String] = []
+    
+    var filteredData: [String]! {
+        didSet {
+            tableView.reloadData()
+        }
+    }
     
     // Change status bar text to white
     override func preferredStatusBarStyle() -> UIStatusBarStyle {
@@ -37,7 +46,11 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         tableView.dataSource = self
         tableView.delegate = self
         
+        searchBar.delegate = self
+        
         networkRequest()
+        
+        
         
         // Do any additional setup after loading the view.
     }
@@ -47,10 +60,13 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         // Dispose of any resources that can be recreated.
     }
     
+    
+    // MARK: For default table
+    
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        if let movies = movies {
-            return movies.count
+        if let filteredData = filteredData {
+            return filteredData.count
         } else {
             return 0
         }
@@ -68,16 +84,38 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         
         let baseUrl = "http://image.tmdb.org/t/p/w500/"
         
+        //dataOrganizer(title, overview: overview, posterPath: posterPath)
+        
         let imageUrl = NSURL(string: baseUrl + posterPath)
         
-        cell.titleLabel.text = title
+        cell.titleLabel.text = filteredData[indexPath.row]
         cell.overviewLabel.text = overview
         cell.posterView.setImageWithURL(imageUrl!)
         
         print("row \(indexPath.row)")
         
+        // for search bar
+        // cell.titleLabel.text = filteredData[indexPath.row]
+        
         return cell
         
+    }
+    
+//    func dataOrganizer(title: String, overview: String, posterPath: String) {
+//        
+//        data.append(title)
+//        filteredData = data
+//        print("Data count: \(data.count)")
+//        print("Filtered data count: \(filteredData?.count)")
+//        
+//    }
+    
+    func searchBar(searchBar: UISearchBar, textDidChange searchText: String) {
+        filteredData = searchText.isEmpty ? movieData : movieData.filter({(dataString: String) -> Bool in
+            return dataString.rangeOfString(searchText, options: .CaseInsensitiveSearch) != nil
+        })
+        
+        tableView.reloadData()
     }
     
     func networkRequest() {
@@ -103,7 +141,16 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
                             
                             NSLog("response: \(responseDictionary)")
                             
-                            self.movies = responseDictionary["results"] as! [NSDictionary]
+                            self.movies = responseDictionary["results"] as? [NSDictionary]
+                            
+                            for var i = 0; i < self.movies!.count; i++ {
+                                let movie = self.movies![i]
+                                let title = movie["title"] as! String
+                                
+                                self.movieData.append(title)
+                            }
+                            
+                            self.filteredData = self.movieData
                             
                             MBProgressHUD.hideHUDForView(self.view, animated: true)
                             
