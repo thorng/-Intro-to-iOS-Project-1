@@ -18,9 +18,23 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
     
     var movies: [NSDictionary]?
     
-    var movieData: [String] = []
+    var movieDataTitle: [String] = []
+    var movieDataOverview: [String] = []
+    var movieDataPosterPath: [String] = []
     
-    var filteredData: [String]! {
+    var filteredDataTitle: [String]! {
+        didSet {
+            tableView.reloadData()
+        }
+    }
+    
+    var filteredDataOverview: [String]! {
+        didSet {
+            tableView.reloadData()
+        }
+    }
+    
+    var filteredDataPosterPath: [String]! {
         didSet {
             tableView.reloadData()
         }
@@ -68,7 +82,7 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
     
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        if let filteredData = filteredData {
+        if let filteredData = filteredDataTitle {
             return filteredData.count
         } else {
             return 0
@@ -80,9 +94,9 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         
         let cell = tableView.dequeueReusableCellWithIdentifier("MovieCell", forIndexPath: indexPath) as! MovieCell
         
-        let movie = movies![indexPath.row]
-        let overview = movie["overview"] as! String
-        let posterPath = movie["poster_path"] as! String
+        cell.selectionStyle = UITableViewCellSelectionStyle.Blue
+        
+        let posterPath = filteredDataPosterPath[indexPath.row]
         
         let baseUrl = "http://image.tmdb.org/t/p/w500/"
         
@@ -90,8 +104,8 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         
         let imageUrl = NSURL(string: baseUrl + posterPath)
         
-        cell.titleLabel.text = filteredData[indexPath.row]
-        cell.overviewLabel.text = overview
+        cell.titleLabel.text = filteredDataTitle[indexPath.row]
+        cell.overviewLabel.text = filteredDataOverview[indexPath.row]
         cell.posterView.setImageWithURL(imageUrl!)
         
         print("row \(indexPath.row)")
@@ -113,7 +127,7 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         
         searchBar.setShowsCancelButton(true, animated: true)
 
-        filteredData = searchText.isEmpty ? movieData : movieData.filter({(dataString: String) -> Bool in
+        filteredDataTitle = searchText.isEmpty ? movieDataTitle : movieDataTitle.filter({(dataString: String) -> Bool in
             return dataString.rangeOfString(searchText, options: .CaseInsensitiveSearch) != nil
         })
         
@@ -148,11 +162,17 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
                             for var i = 0; i < self.movies!.count; i++ {
                                 let movie = self.movies![i]
                                 let title = movie["title"] as! String
+                                let overview = movie["overview"] as! String
+                                let posterPath = movie["poster_path"] as! String
                                 
-                                self.movieData.append(title)
+                                self.movieDataTitle.append(title)
+                                self.movieDataOverview.append(overview)
+                                self.movieDataPosterPath.append(posterPath)
                             }
                             
-                            self.filteredData = self.movieData
+                            self.filteredDataTitle = self.movieDataTitle
+                            self.filteredDataOverview = self.movieDataOverview
+                            self.filteredDataPosterPath = self.movieDataPosterPath
                             
                             MBProgressHUD.hideHUDForView(self.view, animated: true)
                             
