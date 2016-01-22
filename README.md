@@ -37,7 +37,7 @@ Inline-style:
 
 
 Inline-style: 
-![alt text](http://imgur.com/4C1rFLx "Flicks Example")
+![alt text](http://imgur.com/4C1rFLx.gif "Flicks Example")
 
 GIF created with [LiceCap](http://www.cockos.com/licecap/).
 
