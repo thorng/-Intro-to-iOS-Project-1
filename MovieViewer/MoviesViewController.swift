@@ -159,6 +159,13 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
         task.resume()
     }
     
+    @IBAction func networkErrorRefreshButton(sender: UIButton) {
+        
+        refreshControl()
+        networkRequest()
+    }
+    
+    
     func refreshControl() {
         let refreshControl = UIRefreshControl()
         refreshControl.backgroundColor = UIColor.blackColor()
@@ -173,6 +180,9 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
         
         self.collectionView.reloadData()
         refreshControl.endRefreshing()
+        
+        MBProgressHUD.hideHUDForView(self.view, animated: true)
+
     }
     
     /*
