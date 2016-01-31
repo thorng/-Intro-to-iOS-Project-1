@@ -108,6 +108,12 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         cell.overviewLabel.text = filteredDataOverview[indexPath.row]
         cell.posterView.setImageWithURL(imageUrl!)
         
+        cell.posterView.alpha = 0.0
+
+        UIView.animateWithDuration(0.5, animations: {
+            cell.posterView.alpha = 1
+        })
+        
         print("row \(indexPath.row)")
         
         // for search bar
