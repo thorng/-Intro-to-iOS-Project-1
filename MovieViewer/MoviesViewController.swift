@@ -10,11 +10,11 @@ import UIKit
 import AFNetworking
 import MBProgressHUD
 
-class MoviesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UISearchBarDelegate {
+class MoviesViewController: UIViewController, UISearchBarDelegate {
 
-    @IBOutlet weak var tableView: UITableView!
-    @IBOutlet weak var networkErrorView: UIView!
+    @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var searchBar: UISearchBar!
+    @IBOutlet weak var networkErrorView: UIView!
     
     var movies: [NSDictionary]?
     
@@ -22,21 +22,27 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
     var movieDataOverview: [String] = []
     var movieDataPosterPath: [String] = []
     
+    var movieDict: [String:String] = [:]
+    
+    var screenSize: CGRect!
+    var screenWidth: CGFloat!
+    var screenHeight: CGFloat!
+    
     var filteredDataTitle: [String]! {
         didSet {
-            tableView.reloadData()
+            collectionView.reloadData()
         }
     }
     
     var filteredDataOverview: [String]! {
         didSet {
-            tableView.reloadData()
+            collectionView.reloadData()
         }
     }
     
     var filteredDataPosterPath: [String]! {
         didSet {
-            tableView.reloadData()
+            collectionView.reloadData()
         }
     }
     
@@ -49,20 +55,21 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         
         super.viewDidLoad()
         
-        networkErrorView.hidden = true
+        screenSize = UIScreen.mainScreen().bounds
+        screenWidth = screenSize.width
         
-        let refreshControl = UIRefreshControl()
-        refreshControl.backgroundColor = UIColor.darkGrayColor()
-        refreshControl.tintColor = UIColor.whiteColor()
-        refreshControl.addTarget(self, action: "refreshControlAction:", forControlEvents: UIControlEvents.ValueChanged)
-        tableView.insertSubview(refreshControl, atIndex: 0)
+        collectionView.dataSource = self
+        collectionView.backgroundColor = UIColor.blackColor()
 
-        tableView.dataSource = self
-        tableView.delegate = self
+        refreshControl()
+        
+        networkErrorView.hidden = true
         
         searchBar.delegate = self
         
-        tableView.backgroundColor = UIColor.darkGrayColor()
+        let layout: UICollectionViewFlowLayout = UICollectionViewFlowLayout()
+        layout.minimumInteritemSpacing = 0
+        layout.minimumLineSpacing = 0
         
         networkRequest()
 
@@ -78,51 +85,6 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         searchBar.endEditing(true)
     }
     
-    // MARK: For default table
-    
-    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        
-        if let filteredData = filteredDataTitle {
-            return filteredData.count
-        } else {
-            return 0
-        }
-
-    }
-
-    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        
-        let cell = tableView.dequeueReusableCellWithIdentifier("MovieCell", forIndexPath: indexPath) as! MovieCell
-        
-        cell.selectionStyle = UITableViewCellSelectionStyle.Blue
-        
-        let posterPath = filteredDataPosterPath[indexPath.row]
-        
-        let baseUrl = "http://image.tmdb.org/t/p/w500/"
-        
-        //dataOrganizer(title, overview: overview, posterPath: posterPath)
-        
-        let imageUrl = NSURL(string: baseUrl + posterPath)
-        
-        cell.titleLabel.text = filteredDataTitle[indexPath.row]
-        cell.overviewLabel.text = filteredDataOverview[indexPath.row]
-        cell.posterView.setImageWithURL(imageUrl!)
-        
-        cell.posterView.alpha = 0.0
-
-        UIView.animateWithDuration(0.5, animations: {
-            cell.posterView.alpha = 1
-        })
-        
-        print("row \(indexPath.row)")
-        
-        // for search bar
-        // cell.titleLabel.text = filteredData[indexPath.row]
-        
-        return cell
-        
-    }
-    
     func searchBarCancelButtonClicked(searchBar: UISearchBar) {
         searchBar.setShowsCancelButton(false, animated: true)
         searchBar.endEditing(true)
@@ -134,10 +96,12 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         searchBar.setShowsCancelButton(true, animated: true)
 
         filteredDataTitle = searchText.isEmpty ? movieDataTitle : movieDataTitle.filter({(dataString: String) -> Bool in
+            
             return dataString.rangeOfString(searchText, options: .CaseInsensitiveSearch) != nil
+            
         })
         
-        tableView.reloadData()
+        collectionView.reloadData()
     }
     
     func networkRequest() {
@@ -161,7 +125,7 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
                             
                             self.networkErrorView.hidden = true
                             
-                            NSLog("response: \(responseDictionary)")
+                            //NSLog("response: \(responseDictionary)")
                             
                             self.movies = responseDictionary["results"] as? [NSDictionary]
                             
@@ -174,6 +138,8 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
                                 self.movieDataTitle.append(title)
                                 self.movieDataOverview.append(overview)
                                 self.movieDataPosterPath.append(posterPath)
+                                
+                                self.movieDict[title] = posterPath
                             }
                             
                             self.filteredDataTitle = self.movieDataTitle
@@ -182,7 +148,7 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
                             
                             MBProgressHUD.hideHUDForView(self.view, animated: true)
                             
-                            self.tableView.reloadData()
+                            self.collectionView.reloadData()
                         
                     }
                 } else {
@@ -193,11 +159,19 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         task.resume()
     }
     
+    func refreshControl() {
+        let refreshControl = UIRefreshControl()
+        refreshControl.backgroundColor = UIColor.blackColor()
+        refreshControl.tintColor = UIColor.whiteColor()
+        refreshControl.addTarget(self, action: "refreshControlAction:", forControlEvents: UIControlEvents.ValueChanged)
+        collectionView.insertSubview(refreshControl, atIndex: 0)
+    }
+    
     func refreshControlAction(refreshControl: UIRefreshControl) {
         
         networkRequest()
         
-        self.tableView.reloadData()
+        self.collectionView.reloadData()
         refreshControl.endRefreshing()
     }
     
@@ -211,4 +185,62 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
     }
     */
 
+}
+
+extension MoviesViewController: UICollectionViewDataSource {
+    
+    func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        if let filteredData = filteredDataTitle {
+            return filteredData.count
+        } else {
+            return 0
+        }
+    }
+    
+    func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
+        
+        let cell = collectionView.dequeueReusableCellWithReuseIdentifier("movieCell", forIndexPath: indexPath) as! MovieCollectionViewCell
+        
+        cell.frame.size.width = screenWidth
+        
+        let posterPath = filteredDataPosterPath[indexPath.row]
+        let baseUrl = "http://image.tmdb.org/t/p/w500/"
+        
+        let imageUrl = NSURL(string: baseUrl + posterPath)
+        
+        let imageRequest = NSURLRequest(URL: imageUrl!)
+        
+        cell.posterImageView.setImageWithURLRequest(
+            imageRequest,
+            placeholderImage: nil,
+            success: { (imageRequest, imageResponse, image) -> Void in
+                
+                // imageResponse will be nil if the image is cached
+                if imageResponse != nil {
+                    print("Image was NOT cached, fade in image")
+                    cell.posterImageView.alpha = 0.0
+                    cell.posterImageView.image = image
+                    UIView.animateWithDuration(0.3, animations: { () -> Void in
+                        cell.posterImageView.alpha = 1.0
+                    })
+                } else {
+                    print("Image was cached so just update the image")
+                    cell.posterImageView.image = image
+                }
+            },
+            failure: { (imageRequest, imageResponse, error) -> Void in
+                // do something for the failure condition
+        })
+        
+        cell.movieTitle.text = filteredDataTitle[indexPath.row]
+        cell.posterImageView.setImageWithURL(imageUrl!)
+        
+        print("row \(indexPath.row)")
+        
+        // for search bar
+        // cell.titleLabel.text = filteredData[indexPath.row]
+        
+        return cell
+
+    }
 }
