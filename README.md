@@ -35,7 +35,7 @@ GIF created with [LiceCap](http://www.cockos.com/licecap/).
 
 ## Notes
 
-Describe any challenges encountered while building the app.
+The search function was tough. Though it would filter out the names, the poster images would remain unfiltered, resulting in the wrong image corresponding to the name. This is what took me the most time; everything else was implemented in 3 hours.
 
 ## License
 
