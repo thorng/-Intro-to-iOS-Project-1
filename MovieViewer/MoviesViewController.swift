@@ -18,33 +18,17 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
     
     var movies: [NSDictionary]?
     
-    var movieDataTitle: [String] = []
-    var movieDataOverview: [String] = []
-    var movieDataPosterPath: [String] = []
-    
-    var movieDict: [String:String] = [:]
+    var moviesObject = Movie()
+    var moviesObjectArray = [Movie]()
+    var filteredObjectArray = [Movie]() {
+        didSet {
+            collectionView.reloadData()
+        }
+    }
     
     var screenSize: CGRect!
     var screenWidth: CGFloat!
     var screenHeight: CGFloat!
-    
-    var filteredDataTitle: [String]! {
-        didSet {
-            collectionView.reloadData()
-        }
-    }
-    
-    var filteredDataOverview: [String]! {
-        didSet {
-            collectionView.reloadData()
-        }
-    }
-    
-    var filteredDataPosterPath: [String]! {
-        didSet {
-            collectionView.reloadData()
-        }
-    }
     
     // Change status bar text to white
     override func preferredStatusBarStyle() -> UIStatusBarStyle {
@@ -72,7 +56,32 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
         layout.minimumLineSpacing = 0
         
         networkRequest()
-
+    }
+    
+    func arraySetup() {
+        for var i = 0; i < self.movies!.count; i++ {
+            
+            let movie = self.movies![i]
+            let title = movie["title"] as! String
+            let overview = movie["overview"] as! String
+            let posterPath = movie["poster_path"] as! String
+            
+            self.moviesObject.movieDataTitle = title
+            self.moviesObject.movieDataOverview = overview
+            self.moviesObject.movieDataPosterPath = posterPath
+            
+            self.moviesObjectArray.append(self.moviesObject)
+            self.filteredObjectArray.append(self.moviesObject)
+            
+            print("\(i) object in filteredObjectArray: \(self.filteredObjectArray[i].movieDataTitle)")
+            print("\(i) object in moviesObjectArray: \(self.moviesObjectArray[i].movieDataTitle)")
+            
+            collectionView.reloadData()
+        }
+        
+        for movieObject in moviesObjectArray {
+            print("movieObject: \(movieObject.movieDataTitle)")
+        }
     }
 
     override func didReceiveMemoryWarning() {
@@ -95,9 +104,9 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
         
         searchBar.setShowsCancelButton(true, animated: true)
 
-        filteredDataTitle = searchText.isEmpty ? movieDataTitle : movieDataTitle.filter({(dataString: String) -> Bool in
+        filteredObjectArray = searchText.isEmpty ? moviesObjectArray : moviesObjectArray.filter({(data: Movie) -> Bool in
             
-            return dataString.rangeOfString(searchText, options: .CaseInsensitiveSearch) != nil
+            return data.movieDataTitle.rangeOfString(searchText, options: .CaseInsensitiveSearch) != nil
             
         })
         
@@ -125,28 +134,13 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
                             
                             self.networkErrorView.hidden = true
                             
-                            //NSLog("response: \(responseDictionary)")
+//                            NSLog("response: \(responseDictionary)")
                             
                             self.movies = responseDictionary["results"] as? [NSDictionary]
                             
-                            for var i = 0; i < self.movies!.count; i++ {
-                                let movie = self.movies![i]
-                                let title = movie["title"] as! String
-                                let overview = movie["overview"] as! String
-                                let posterPath = movie["poster_path"] as! String
-                                
-                                self.movieDataTitle.append(title)
-                                self.movieDataOverview.append(overview)
-                                self.movieDataPosterPath.append(posterPath)
-                                
-                                self.movieDict[title] = posterPath
-                            }
-                            
-                            self.filteredDataTitle = self.movieDataTitle
-                            self.filteredDataOverview = self.movieDataOverview
-                            self.filteredDataPosterPath = self.movieDataPosterPath
-                            
                             MBProgressHUD.hideHUDForView(self.view, animated: true)
+                            
+                            self.arraySetup()
                             
                             self.collectionView.reloadData()
                         
@@ -156,6 +150,7 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
                     self.networkErrorView.hidden = false
                 }
         });
+        
         task.resume()
     }
     
@@ -163,6 +158,7 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
         
         refreshControl()
         networkRequest()
+        
     }
     
     
@@ -200,11 +196,7 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
 extension MoviesViewController: UICollectionViewDataSource {
     
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        if let filteredData = filteredDataTitle {
-            return filteredData.count
-        } else {
-            return 0
-        }
+        return filteredObjectArray.count
     }
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
@@ -213,8 +205,12 @@ extension MoviesViewController: UICollectionViewDataSource {
         
         cell.frame.size.width = screenWidth
         
-        let posterPath = filteredDataPosterPath[indexPath.row]
         let baseUrl = "http://image.tmdb.org/t/p/w500/"
+        
+        cell.movieTitle.text = filteredObjectArray[indexPath.row].movieDataTitle
+        
+        let posterPath = filteredObjectArray[indexPath.row].movieDataPosterPath
+        print("\(posterPath)")
         
         let imageUrl = NSURL(string: baseUrl + posterPath)
         
@@ -227,14 +223,14 @@ extension MoviesViewController: UICollectionViewDataSource {
                 
                 // imageResponse will be nil if the image is cached
                 if imageResponse != nil {
-                    print("Image was NOT cached, fade in image")
+//                    print("Image was NOT cached, fade in image")
                     cell.posterImageView.alpha = 0.0
                     cell.posterImageView.image = image
                     UIView.animateWithDuration(0.3, animations: { () -> Void in
                         cell.posterImageView.alpha = 1.0
                     })
                 } else {
-                    print("Image was cached so just update the image")
+//                    print("Image was cached so just update the image")
                     cell.posterImageView.image = image
                 }
             },
@@ -242,8 +238,6 @@ extension MoviesViewController: UICollectionViewDataSource {
                 // do something for the failure condition
         })
         
-        cell.movieTitle.text = filteredDataTitle[indexPath.row]
-        cell.posterImageView.setImageWithURL(imageUrl!)
         
         print("row \(indexPath.row)")
         
