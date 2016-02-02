@@ -9,7 +9,7 @@
 import Foundation
 
 class Movie: NSObject {
-    var movieDataTitle = ""
-    var movieDataPosterPath = ""
-    var movieDataOverview = ""
+    var movieDataTitle: String = ""
+    var movieDataPosterPath: String = ""
+    var movieDataOverview: String = ""
 }

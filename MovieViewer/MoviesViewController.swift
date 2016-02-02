@@ -18,7 +18,6 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
     
     var movies: [NSDictionary]?
     
-    var moviesObject = Movie()
     var moviesObjectArray = [Movie]()
     var filteredObjectArray = [Movie]() {
         didSet {
@@ -61,22 +60,24 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
     func arraySetup() {
         for var i = 0; i < self.movies!.count; i++ {
             
+            let moviesObject = Movie()
+
             let movie = self.movies![i]
             let title = movie["title"] as! String
             let overview = movie["overview"] as! String
             let posterPath = movie["poster_path"] as! String
+
+            moviesObject.movieDataTitle = title
+            moviesObject.movieDataOverview = overview
+            moviesObject.movieDataPosterPath = posterPath
             
-            self.moviesObject.movieDataTitle = title
-            self.moviesObject.movieDataOverview = overview
-            self.moviesObject.movieDataPosterPath = posterPath
-            
-            self.moviesObjectArray.append(self.moviesObject)
-            self.filteredObjectArray.append(self.moviesObject)
+            self.moviesObjectArray.append(moviesObject)
+            self.filteredObjectArray.append(moviesObject)
             
             print("\(i) object in filteredObjectArray: \(self.filteredObjectArray[i].movieDataTitle)")
             print("\(i) object in moviesObjectArray: \(self.moviesObjectArray[i].movieDataTitle)")
             
-            collectionView.reloadData()
+//            collectionView.reloadData()
         }
         
         for movieObject in moviesObjectArray {
@@ -106,7 +107,9 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
 
         filteredObjectArray = searchText.isEmpty ? moviesObjectArray : moviesObjectArray.filter({(data: Movie) -> Bool in
             
-            return data.movieDataTitle.rangeOfString(searchText, options: .CaseInsensitiveSearch) != nil
+            let movieSearch = data.movieDataTitle.rangeOfString(searchText, options: .CaseInsensitiveSearch)
+            
+            return movieSearch != nil
             
         })
         
@@ -210,7 +213,6 @@ extension MoviesViewController: UICollectionViewDataSource {
         cell.movieTitle.text = filteredObjectArray[indexPath.row].movieDataTitle
         
         let posterPath = filteredObjectArray[indexPath.row].movieDataPosterPath
-        print("\(posterPath)")
         
         let imageUrl = NSURL(string: baseUrl + posterPath)
         

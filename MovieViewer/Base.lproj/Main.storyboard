@@ -54,6 +54,7 @@
                                         <connections>
                                             <outlet property="movieTitle" destination="jdp-xU-19r" id="zDB-v6-dV5"/>
                                             <outlet property="posterImageView" destination="XYP-nI-3Bx" id="nvw-pV-WBJ"/>
+                                            <segue destination="uqL-93-Wfc" kind="push" id="f74-Wr-Ndh"/>
                                         </connections>
                                     </collectionViewCell>
                                 </cells>
@@ -101,6 +102,21 @@
                 </tapGestureRecognizer>
             </objects>
             <point key="canvasLocation" x="184" y="406"/>
+        </scene>
+        <!--View Controller-->
+        <scene sceneID="ccQ-NQ-S8B">
+            <objects>
+                <viewController id="uqL-93-Wfc" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="qUO-1p-cor">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                    <navigationItem key="navigationItem" id="m6Q-sg-Rze"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="SZl-tq-emx" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="600" y="406"/>
         </scene>
     </scenes>
 </document>
