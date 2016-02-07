@@ -89,7 +89,7 @@ Please list two areas of the assignment you'd like to **discuss further with you
 
 Here's a walkthrough of implemented user stories:
 
-![alt text](http://imgur.com/76PLAkc.gifv "Flicks Week 2 Example")
+![alt text](FlicksDemo_week2.gif "Flicks Week 2 Example")
 
 GIF created with [LiceCap](http://www.cockos.com/licecap/).
 
