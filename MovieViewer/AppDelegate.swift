@@ -19,7 +19,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         // Programmatically make
         
+        UINavigationBar.appearance().tintColor = UIColor(red: 1, green: 0.29, blue: 0.29, alpha: 1)
+        
         window = UIWindow(frame: UIScreen.mainScreen().bounds)
+        
+        tabBarController()
+        
+        let colorView = UIView()
+        colorView.backgroundColor = UIColor(hue: 0.3, saturation: 1, brightness: 0.57, alpha: 1.0) /* #1d9100 */
+        
+        // use UITableViewCell.appearance() to configure
+        // the default appearance of all UITableViewCells in your app
+        UITableViewCell.appearance().selectedBackgroundView = colorView
+        
+        return true
+    }
+    
+    func tabBarController() {
         
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         
@@ -33,26 +49,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let topRatedNavigationController = storyboard.instantiateViewControllerWithIdentifier("MoviesNavigationController") as! UINavigationController
         let topRatedViewController = topRatedNavigationController.topViewController as! MoviesViewController
         topRatedViewController.endpoint = "top_rated"
+        topRatedNavigationController.navigationItem.title = "Top Rated"
         topRatedNavigationController.tabBarItem.title = "Top Rated"
         topRatedNavigationController.tabBarItem.image = UIImage(named: "Popcorn Maker-50")
         topRatedNavigationController.tabBarItem.image = imageWithImage(topRatedNavigationController.tabBarItem.image!, scaledToSize: CGSizeMake(30, 30)) // scale image down
-
+        
         // instantiate tab bar controller
         let tabBarController = UITabBarController()
+        UITabBar.appearance().barTintColor = UIColor.blackColor()
+        UITabBar.appearance().tintColor = UIColor(red: 1, green: 0.29, blue: 0.29, alpha: 1)
         tabBarController.viewControllers = [nowPlayingNavigationController, topRatedNavigationController]
         
         // initial view controller
         window?.rootViewController = tabBarController
         window?.makeKeyAndVisible()
         
-        let colorView = UIView()
-        colorView.backgroundColor = UIColor(hue: 0.3, saturation: 1, brightness: 0.57, alpha: 1.0) /* #1d9100 */
-        
-        // use UITableViewCell.appearance() to configure
-        // the default appearance of all UITableViewCells in your app
-        UITableViewCell.appearance().selectedBackgroundView = colorView
-        
-        return true
     }
     
     // to scale tab bar images
