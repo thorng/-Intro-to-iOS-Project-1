@@ -60,28 +60,6 @@
                                     </collectionViewCell>
                                 </cells>
                             </collectionView>
-                            <view contentMode="scaleToFill" id="pNg-ee-WiL">
-                                <rect key="frame" x="0.0" y="20" width="320" height="40"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <subviews>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Network Error" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="FFk-71-VQY">
-                                        <rect key="frame" x="107" y="11" width="107" height="21"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                        <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
-                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" id="jaJ-Ux-n0M">
-                                        <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <connections>
-                                            <action selector="networkErrorRefreshButton:" destination="BYZ-38-t0r" eventType="touchUpInside" id="VOC-C1-MP9"/>
-                                        </connections>
-                                    </button>
-                                </subviews>
-                                <color key="backgroundColor" red="0.8232323232323232" green="0.0" blue="0.0082747360845136942" alpha="1" colorSpace="calibratedRGB"/>
-                                <gestureRecognizers/>
-                            </view>
                         </subviews>
                         <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                         <gestureRecognizers/>
@@ -92,7 +70,6 @@
                     <navigationItem key="navigationItem" id="yEx-DB-CC1"/>
                     <connections>
                         <outlet property="collectionView" destination="g3B-DU-6e4" id="9Nv-vD-drd"/>
-                        <outlet property="networkErrorView" destination="pNg-ee-WiL" id="BS8-9u-ZDk"/>
                         <outlet property="searchBar" destination="hab-vd-Pcb" id="b3U-e3-zDO"/>
                     </connections>
                 </viewController>

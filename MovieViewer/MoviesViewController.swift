@@ -17,8 +17,6 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
     var screenHeight: CGFloat!
     
     @IBOutlet weak var collectionView: UICollectionView!
-//    @IBOutlet weak var searchBar: UISearchBar!
-    @IBOutlet weak var networkErrorView: UIView!
     
     var programNetworkErrorView: UIView! = UIView(frame: CGRectMake(0, 0, 320, 568))
     
@@ -27,6 +25,8 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
     var endpoint: String! // movie endpoint
     
     var movies: [NSDictionary]?
+    
+    var shouldBeginEditing: Bool!
     
     var moviesObjectArray = [Movie]()
     var filteredObjectArray = [Movie]() {
@@ -41,6 +41,8 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
     }
     
     override func viewDidLoad() {
+        
+        shouldBeginEditing = true
         
         super.viewDidLoad()
         
@@ -62,52 +64,17 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
         layout.minimumInteritemSpacing = 0
         layout.minimumLineSpacing = 0
         
-        networkRequest()
+//        networkRequest()
         
         networkErrorViewSetup()
         
     }
     
-    func networkErrorViewSetup() {
-        
-        programNetworkErrorView.hidden = false
-        
-        screenSize = UIScreen.mainScreen().bounds
-        screenWidth = screenSize.width
-        screenHeight = screenSize.height
-        
-        programNetworkErrorView.backgroundColor = UIColor.blackColor()
-        self.view.addSubview(programNetworkErrorView)
-        
-        let networkErrorText = UILabel(frame: CGRectMake(0, screenHeight/2, screenWidth, 40))
-        networkErrorText.text = "Network Error"
-        networkErrorText.textAlignment = NSTextAlignment.Center
-        networkErrorText.textColor = UIColor.grayColor()
-        programNetworkErrorView.addSubview(networkErrorText)
-        
-        let errorImageName = "error.png"
-        let errorImage = UIImage(named: errorImageName)
-        let networkErrorImage = UIImageView(image: errorImage)
-        networkErrorImage.image = networkErrorImage.image!.imageWithRenderingMode(UIImageRenderingMode.AlwaysTemplate)
-        networkErrorImage.tintColor = UIColor.grayColor()
-        networkErrorImage.contentMode = UIViewContentMode.ScaleAspectFit
-        networkErrorImage.frame = CGRectMake(0, (screenHeight/2) - 30, screenWidth, 40)
-        programNetworkErrorView.addSubview(networkErrorImage)
-        
-        let networkErrorRefreshButton = UIButton(frame: CGRectMake(0, 0, screenWidth, screenHeight))
-        programNetworkErrorView.addSubview(networkErrorRefreshButton)
-        networkErrorRefreshButton.addTarget(self, action: "networkErrorRefreshButtonAction:", forControlEvents: UIControlEvents.TouchUpInside)
-        
-    }
-    
-    func networkErrorRefreshButtonAction(sender: UIButton) {
-        
-        refreshControl()
-        networkRequest()
-        
-    }
-    
     func arraySetup() {
+        
+        moviesObjectArray = []
+        filteredObjectArray = []
+        
         for var i = 0; i < self.movies!.count; i++ {
             
             let moviesObject = Movie()
@@ -116,7 +83,6 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
             
             if let title = movie["title"] as? String {
                 moviesObject.movieDataTitle = title
-
             }
             
             if let overview = movie["overview"] as? String {
@@ -170,12 +136,9 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
                     if let data = dataOrNil {
                         if let responseDictionary = try! NSJSONSerialization.JSONObjectWithData(
                             data, options:[]) as? NSDictionary {
-                                
-                                
-                                //                            self.networkErrorView.hidden = true
+               
                                 self.programNetworkErrorView.hidden = true
-                                
-                                
+
                                 //                            NSLog("response: \(responseDictionary)")
                                 
                                 self.movies = responseDictionary["results"] as? [NSDictionary]
@@ -183,32 +146,80 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
                                 MBProgressHUD.hideHUDForView(self.view, animated: true)
                                 
                                 self.arraySetup()
-                                
                                 self.collectionView.reloadData()
-                                
+                            
                         }
                     } else {
                         
                         MBProgressHUD.hideHUDForView(self.view, animated: true)
                         self.programNetworkErrorView.hidden = false
-                        //                    self.networkErrorView.hidden = false
                         
                     }
-                    
                 }
-
         })
         
         task.resume()
     }
     
-    @IBAction func networkErrorRefreshButton(sender: UIButton) {
+    // MARK: - Navigation
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        
+        let cell = sender as! UICollectionViewCell
+        let indexPath = collectionView.indexPathForCell(cell)
+        let movie = movies![indexPath!.row]
+        
+        let detailViewController = segue.destinationViewController as! DetailViewcontroller
+        detailViewController.movie = movie
+    }
+    
+}
+
+// MARK: - Network Error View Setup
+extension MoviesViewController {
+    
+    func networkErrorViewSetup() {
+        
+        programNetworkErrorView.hidden = false
+        
+        screenSize = UIScreen.mainScreen().bounds
+        screenWidth = screenSize.width
+        screenHeight = screenSize.height
+        
+        programNetworkErrorView.backgroundColor = UIColor.blackColor()
+        self.view.addSubview(programNetworkErrorView)
+        
+        let networkErrorText = UILabel(frame: CGRectMake(0, screenHeight/2, screenWidth, 40))
+        networkErrorText.text = "Network Error"
+        networkErrorText.textAlignment = NSTextAlignment.Center
+        networkErrorText.textColor = UIColor.grayColor()
+        programNetworkErrorView.addSubview(networkErrorText)
+        
+        let errorImageName = "error.png"
+        let errorImage = UIImage(named: errorImageName)
+        let networkErrorImage = UIImageView(image: errorImage)
+        networkErrorImage.image = networkErrorImage.image!.imageWithRenderingMode(UIImageRenderingMode.AlwaysTemplate)
+        networkErrorImage.tintColor = UIColor.grayColor()
+        networkErrorImage.contentMode = UIViewContentMode.ScaleAspectFit
+        networkErrorImage.frame = CGRectMake(0, (screenHeight/2) - 30, screenWidth, 40)
+        programNetworkErrorView.addSubview(networkErrorImage)
+        
+        let networkErrorRefreshButton = UIButton(frame: CGRectMake(0, 0, screenWidth, screenHeight))
+        programNetworkErrorView.addSubview(networkErrorRefreshButton)
+        networkErrorRefreshButton.addTarget(self, action: "networkErrorRefreshButtonAction:", forControlEvents: UIControlEvents.TouchUpInside)
+        
+    }
+    
+    func networkErrorRefreshButtonAction(sender: UIButton) {
         
         refreshControl()
         networkRequest()
         
     }
     
+}
+
+// MARK: - Refresh control setup
+extension MoviesViewController {
     
     func refreshControl() {
         let refreshControl = UIRefreshControl()
@@ -226,29 +237,17 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
         refreshControl.endRefreshing()
         
         MBProgressHUD.hideHUDForView(self.view, animated: true)
-
-    }
-    
-    
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         
-        let cell = sender as! UICollectionViewCell
-        let indexPath = collectionView.indexPathForCell(cell)
-        let movie = movies![indexPath!.row]
-        
-        let detailViewController = segue.destinationViewController as! DetailViewcontroller
-        detailViewController.movie = movie
     }
     
 }
 
-// search bar actions
+// MARK: - Search bar actions
 extension MoviesViewController {
     
     func searchBarShouldBeginEditing(searchBar: UISearchBar) -> Bool {
+//        let boolToReturn = shouldBeginEditing
+//        shouldBeginEditing = true
         searchBar.setShowsCancelButton(true, animated: true)
         return true
     }
@@ -259,16 +258,18 @@ extension MoviesViewController {
         searchBar.resignFirstResponder()
     }
     
+    
     func searchBar(searchBar: UISearchBar, textDidChange searchText: String) {
         
         searchBar.setShowsCancelButton(true, animated: true)
         
+//        if searchBar.isFirstResponder() == false {
+//            shouldBeginEditing = false
+//        }
+        
         filteredObjectArray = searchText.isEmpty ? moviesObjectArray : moviesObjectArray.filter({(data: Movie) -> Bool in
-            
             let movieSearch = data.movieDataTitle.rangeOfString(searchText, options: .CaseInsensitiveSearch)
-            
             return movieSearch != nil
-            
         })
         
         collectionView.reloadData()
@@ -276,6 +277,7 @@ extension MoviesViewController {
     
 }
 
+// MARK: - CollectionView Setup
 extension MoviesViewController: UICollectionViewDataSource {
     
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
