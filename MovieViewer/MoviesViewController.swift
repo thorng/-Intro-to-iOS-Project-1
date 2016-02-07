@@ -16,6 +16,8 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var networkErrorView: UIView!
     
+    var endpoint: String!
+    
     var movies: [NSDictionary]?
     
     var moviesObjectArray = [Movie]()
@@ -63,13 +65,19 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
             let moviesObject = Movie()
 
             let movie = self.movies![i]
-            let title = movie["title"] as! String
-            let overview = movie["overview"] as! String
-            let posterPath = movie["poster_path"] as! String
+            
+            if let title = movie["title"] as? String {
+                moviesObject.movieDataTitle = title
 
-            moviesObject.movieDataTitle = title
-            moviesObject.movieDataOverview = overview
-            moviesObject.movieDataPosterPath = posterPath
+            }
+            
+            if let overview = movie["overview"] as? String {
+                moviesObject.movieDataOverview = overview
+            }
+            
+            if let posterPath = movie["poster_path"] as? String {
+                moviesObject.movieDataPosterPath = posterPath
+            }
             
             self.moviesObjectArray.append(moviesObject)
             self.filteredObjectArray.append(moviesObject)
@@ -121,8 +129,10 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
         MBProgressHUD.showHUDAddedTo(self.view, animated: true)
         
         let apiKey = "a07e22bc18f5cb106bfe4cc1f83ad8ed"
-        let url = NSURL(string:"https://api.themoviedb.org/3/movie/now_playing?api_key=\(apiKey)")
+        let url = NSURL(string:"https://api.themoviedb.org/3/movie/\(endpoint)?api_key=\(apiKey)")
+        
         let request = NSURLRequest(URL: url!)
+        
         let session = NSURLSession(
             configuration: NSURLSessionConfiguration.defaultSessionConfiguration(),
             delegate:nil,
@@ -184,15 +194,20 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
 
     }
     
-    /*
+    
     // MARK: - Navigation
 
     // In a storyboard-based application, you will often want to do a little preparation before navigation
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
+        
+        let cell = sender as! UICollectionViewCell
+        let indexPath = collectionView.indexPathForCell(cell)
+        let movie = movies![indexPath!.row]
+        
+        let detailViewController = segue.destinationViewController as! DetailViewcontroller
+        detailViewController.movie = movie
     }
-    */
+    
 
 }
 

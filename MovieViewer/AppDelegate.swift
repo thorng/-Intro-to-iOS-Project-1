@@ -17,6 +17,34 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         // Override point for customization after application launch.
         
+        // Programmatically make
+        
+        window = UIWindow(frame: UIScreen.mainScreen().bounds)
+        
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        
+        let nowPlayingNavigationController = storyboard.instantiateViewControllerWithIdentifier("MoviesNavigationController") as! UINavigationController
+        let nowPlayingViewController = nowPlayingNavigationController.topViewController as! MoviesViewController
+        nowPlayingViewController.endpoint = "now_playing" // set endpoint variable
+        nowPlayingNavigationController.tabBarItem.title = "Now Playing" // add title, image
+        nowPlayingNavigationController.tabBarItem.image = UIImage(named: "Movie-50")
+        nowPlayingNavigationController.tabBarItem.image = imageWithImage(nowPlayingNavigationController.tabBarItem.image!, scaledToSize: CGSizeMake(30, 30)) // scale image down
+        
+        let topRatedNavigationController = storyboard.instantiateViewControllerWithIdentifier("MoviesNavigationController") as! UINavigationController
+        let topRatedViewController = topRatedNavigationController.topViewController as! MoviesViewController
+        topRatedViewController.endpoint = "top_rated"
+        topRatedNavigationController.tabBarItem.title = "Top Rated"
+        topRatedNavigationController.tabBarItem.image = UIImage(named: "Popcorn Maker-50")
+        topRatedNavigationController.tabBarItem.image = imageWithImage(topRatedNavigationController.tabBarItem.image!, scaledToSize: CGSizeMake(30, 30)) // scale image down
+
+        // instantiate tab bar controller
+        let tabBarController = UITabBarController()
+        tabBarController.viewControllers = [nowPlayingNavigationController, topRatedNavigationController]
+        
+        // initial view controller
+        window?.rootViewController = tabBarController
+        window?.makeKeyAndVisible()
+        
         let colorView = UIView()
         colorView.backgroundColor = UIColor(hue: 0.3, saturation: 1, brightness: 0.57, alpha: 1.0) /* #1d9100 */
         
@@ -25,6 +53,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UITableViewCell.appearance().selectedBackgroundView = colorView
         
         return true
+    }
+    
+    // to scale tab bar images
+    func imageWithImage(image: UIImage, scaledToSize: CGSize) -> UIImage {
+        
+        UIGraphicsBeginImageContextWithOptions(scaledToSize, false, 0.0)
+        let newRect = CGRectMake(0, 0, scaledToSize.width, scaledToSize.height)
+        image.drawInRect(newRect)
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        return newImage
+        
     }
 
     func applicationWillResignActive(application: UIApplication) {
