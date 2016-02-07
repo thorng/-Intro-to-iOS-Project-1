@@ -95,7 +95,7 @@ GIF created with [LiceCap](http://www.cockos.com/licecap/).
 
 ## Notes
 
-Describe any challenges encountered while building the app.
+The optional step of loading a low-res image then loading a high-res image while keeping my fading in feature was tough to figure out.
 
 ## License
 
