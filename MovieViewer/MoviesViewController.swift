@@ -11,14 +11,20 @@ import AFNetworking
 import MBProgressHUD
 
 class MoviesViewController: UIViewController, UISearchBarDelegate {
-
+    
+    var screenSize: CGRect!
+    var screenWidth: CGFloat!
+    var screenHeight: CGFloat!
+    
     @IBOutlet weak var collectionView: UICollectionView!
 //    @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var networkErrorView: UIView!
     
-    lazy var searchBar = UISearchBar(frame: CGRectMake(0, 0, 0, 0))
+    var programNetworkErrorView: UIView! = UIView(frame: CGRectMake(0, 0, 320, 568))
     
-    var endpoint: String!
+    lazy var searchBar = UISearchBar(frame: CGRectMake(0, 0, 0, 0)) // add the search bar programmatically
+    
+    var endpoint: String! // movie endpoint
     
     var movies: [NSDictionary]?
     
@@ -29,10 +35,6 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
         }
     }
     
-    var screenSize: CGRect!
-    var screenWidth: CGFloat!
-    var screenHeight: CGFloat!
-    
     // Change status bar text to white
     override func preferredStatusBarStyle() -> UIStatusBarStyle {
         return .LightContent
@@ -42,9 +44,6 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
         
         super.viewDidLoad()
         
-//        let leftNavBarButton = UIBarButtonItem(customView: searchBar)
-//        self.navigationItem.leftBarButtonItem = leftNavBarButton
-        
         searchBar.placeholder = "Search"
         navigationItem.titleView = searchBar
         
@@ -52,15 +51,10 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
         
         self.automaticallyAdjustsScrollViewInsets = false // prevents an annoying inset when using search bar
         
-        screenSize = UIScreen.mainScreen().bounds
-        screenWidth = screenSize.width
-        
         collectionView.dataSource = self
         collectionView.backgroundColor = UIColor.blackColor()
 
         refreshControl()
-        
-        networkErrorView.hidden = true
         
         searchBar.delegate = self
         
@@ -69,6 +63,48 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
         layout.minimumLineSpacing = 0
         
         networkRequest()
+        
+        networkErrorViewSetup()
+        
+    }
+    
+    func networkErrorViewSetup() {
+        
+        programNetworkErrorView.hidden = false
+        
+        screenSize = UIScreen.mainScreen().bounds
+        screenWidth = screenSize.width
+        screenHeight = screenSize.height
+        
+        programNetworkErrorView.backgroundColor = UIColor.blackColor()
+        self.view.addSubview(programNetworkErrorView)
+        
+        let networkErrorText = UILabel(frame: CGRectMake(0, screenHeight/2, screenWidth, 40))
+        networkErrorText.text = "Network Error"
+        networkErrorText.textAlignment = NSTextAlignment.Center
+        networkErrorText.textColor = UIColor.grayColor()
+        programNetworkErrorView.addSubview(networkErrorText)
+        
+        let errorImageName = "error.png"
+        let errorImage = UIImage(named: errorImageName)
+        let networkErrorImage = UIImageView(image: errorImage)
+        networkErrorImage.image = networkErrorImage.image!.imageWithRenderingMode(UIImageRenderingMode.AlwaysTemplate)
+        networkErrorImage.tintColor = UIColor.grayColor()
+        networkErrorImage.contentMode = UIViewContentMode.ScaleAspectFit
+        networkErrorImage.frame = CGRectMake(0, (screenHeight/2) - 30, screenWidth, 40)
+        programNetworkErrorView.addSubview(networkErrorImage)
+        
+        let networkErrorRefreshButton = UIButton(frame: CGRectMake(0, 0, screenWidth, screenHeight))
+        programNetworkErrorView.addSubview(networkErrorRefreshButton)
+        networkErrorRefreshButton.addTarget(self, action: "networkErrorRefreshButtonAction:", forControlEvents: UIControlEvents.TouchUpInside)
+        
+    }
+    
+    func networkErrorRefreshButtonAction(sender: UIButton) {
+        
+        refreshControl()
+        networkRequest()
+        
     }
     
     func arraySetup() {
@@ -93,11 +129,6 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
             
             self.moviesObjectArray.append(moviesObject)
             self.filteredObjectArray.append(moviesObject)
-            
-//            print("\(i) object in filteredObjectArray: \(self.filteredObjectArray[i].movieDataTitle)")
-//            print("\(i) object in moviesObjectArray: \(self.moviesObjectArray[i].movieDataTitle)")
-            
-//            collectionView.reloadData()
         }
     }
 
@@ -110,39 +141,6 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
     @IBAction func hideKeyboardTap(sender: AnyObject) {
         searchBar.endEditing(true)
     }
-    
-    func searchBarShouldBeginEditing(searchBar: UISearchBar) -> Bool {
-        searchBar.setShowsCancelButton(true, animated: true)
-        return true
-    }
-    
-    func searchBarCancelButtonClicked(searchBar: UISearchBar) {
-        searchBar.setShowsCancelButton(false, animated: true)
-        searchBar.endEditing(true)
-        searchBar.resignFirstResponder()
-    }
-    
-    func searchBar(searchBar: UISearchBar, textDidChange searchText: String) {
-        
-        searchBar.setShowsCancelButton(true, animated: true)
-
-        filteredObjectArray = searchText.isEmpty ? moviesObjectArray : moviesObjectArray.filter({(data: Movie) -> Bool in
-            
-            let movieSearch = data.movieDataTitle.rangeOfString(searchText, options: .CaseInsensitiveSearch)
-            
-            return movieSearch != nil
-            
-        })
-        
-        collectionView.reloadData()
-    }
-    
-//    func searchBarTextDidBeginEditing(searchBar: UISearchBar) {
-//        
-//        let barButton = UIBarButtonItem(title: "Button Title", style: UIBarButtonItemStyle.Done, target: self, action: "here")
-//        self.navigationItem.rightBarButtonItem = barButton
-//        
-//    }
     
     func networkRequest() {
         
@@ -161,28 +159,45 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
         
         let task : NSURLSessionDataTask = session.dataTaskWithRequest(request,
             completionHandler: { (dataOrNil, response, error) in
-                if let data = dataOrNil {
-                    if let responseDictionary = try! NSJSONSerialization.JSONObjectWithData(
-                        data, options:[]) as? NSDictionary {
-                            
-                            self.networkErrorView.hidden = true
-                            
-//                            NSLog("response: \(responseDictionary)")
-                            
-                            self.movies = responseDictionary["results"] as? [NSDictionary]
-                            
-                            MBProgressHUD.hideHUDForView(self.view, animated: true)
-                            
-                            self.arraySetup()
-                            
-                            self.collectionView.reloadData()
+                if error != nil {
+                    
+                    MBProgressHUD.hideHUDForView(self.view, animated: true)
+                    self.programNetworkErrorView.hidden = false
+                    //                    self.networkErrorView.hidden = false
+                    
+                } else {
+                    
+                    if let data = dataOrNil {
+                        if let responseDictionary = try! NSJSONSerialization.JSONObjectWithData(
+                            data, options:[]) as? NSDictionary {
+                                
+                                
+                                //                            self.networkErrorView.hidden = true
+                                self.programNetworkErrorView.hidden = true
+                                
+                                
+                                //                            NSLog("response: \(responseDictionary)")
+                                
+                                self.movies = responseDictionary["results"] as? [NSDictionary]
+                                
+                                MBProgressHUD.hideHUDForView(self.view, animated: true)
+                                
+                                self.arraySetup()
+                                
+                                self.collectionView.reloadData()
+                                
+                        }
+                    } else {
+                        
+                        MBProgressHUD.hideHUDForView(self.view, animated: true)
+                        self.programNetworkErrorView.hidden = false
+                        //                    self.networkErrorView.hidden = false
                         
                     }
-                } else {
-                    MBProgressHUD.hideHUDForView(self.view, animated: true)
-                    self.networkErrorView.hidden = false
+                    
                 }
-        });
+
+        })
         
         task.resume()
     }
@@ -228,7 +243,37 @@ class MoviesViewController: UIViewController, UISearchBarDelegate {
         detailViewController.movie = movie
     }
     
+}
 
+// search bar actions
+extension MoviesViewController {
+    
+    func searchBarShouldBeginEditing(searchBar: UISearchBar) -> Bool {
+        searchBar.setShowsCancelButton(true, animated: true)
+        return true
+    }
+    
+    func searchBarCancelButtonClicked(searchBar: UISearchBar) {
+        searchBar.setShowsCancelButton(false, animated: true)
+        searchBar.endEditing(true)
+        searchBar.resignFirstResponder()
+    }
+    
+    func searchBar(searchBar: UISearchBar, textDidChange searchText: String) {
+        
+        searchBar.setShowsCancelButton(true, animated: true)
+        
+        filteredObjectArray = searchText.isEmpty ? moviesObjectArray : moviesObjectArray.filter({(data: Movie) -> Bool in
+            
+            let movieSearch = data.movieDataTitle.rangeOfString(searchText, options: .CaseInsensitiveSearch)
+            
+            return movieSearch != nil
+            
+        })
+        
+        collectionView.reloadData()
+    }
+    
 }
 
 extension MoviesViewController: UICollectionViewDataSource {
@@ -249,33 +294,8 @@ extension MoviesViewController: UICollectionViewDataSource {
         
         let posterPath = filteredObjectArray[indexPath.row].movieDataPosterPath
         
-//        let imageUrl = NSURL(string: baseUrl + posterPath)
         let smallImageUrl = NSURL(string: lowresBaseUrl + posterPath)
         let largeImageUrl = NSURL(string: highresBaseUrl + posterPath)
-        
-//        let imageRequest = NSURLRequest(URL: imageUrl!)
-        
-//        cell.posterImageView.setImageWithURLRequest(
-//            imageRequest,
-//            placeholderImage: nil,
-//            success: { (imageRequest, imageResponse, image) -> Void in
-//                
-//                // imageResponse will be nil if the image is cached
-//                if imageResponse != nil {
-////                    print("Image was NOT cached, fade in image")
-//                    cell.posterImageView.alpha = 0.0
-//                    cell.posterImageView.image = image
-//                    UIView.animateWithDuration(0.3, animations: { () -> Void in
-//                        cell.posterImageView.alpha = 1.0
-//                    })
-//                } else {
-////                    print("Image was cached so just update the image")
-//                    cell.posterImageView.image = image
-//                }
-//            },
-//            failure: { (imageRequest, imageResponse, error) -> Void in
-//                // do something for the failure condition
-//        })
         
         let smallImageRequest = NSURLRequest(URL: smallImageUrl!)
         let largeImageRequest = NSURLRequest(URL: largeImageUrl!)
@@ -285,58 +305,61 @@ extension MoviesViewController: UICollectionViewDataSource {
         return cell
 
     }
+    
+    func loadImages (smallImageRequest: NSURLRequest, largeImageRequest: NSURLRequest, cell: MovieCollectionViewCell) {
+        
+        
+        cell.posterImageView.setImageWithURLRequest(
+            smallImageRequest,
+            placeholderImage: nil,
+            success: { (smallImageRequest, smallImageResponse, smallImage) -> Void in
+                
+                //image fading when cached/not cached
+                if smallImageResponse != nil {
+                    //                    print("Image was NOT cached, fade in image")
+                    cell.posterImageView.alpha = 0.0
+                    cell.posterImageView.image = smallImage
+                    
+                    UIView.animateWithDuration(0.3, animations: { () -> Void in
+                        cell.posterImageView.alpha = 1.0
+                        }, completion: { (success) -> Void in
+                            
+                            cell.posterImageView.setImageWithURLRequest(
+                                largeImageRequest,
+                                placeholderImage: smallImage,
+                                success: { (largeImageRequest, largeImageResponse, largeImage) -> Void in
+                                    
+                                    cell.posterImageView.image = largeImage
+                                    
+                                },
+                                failure: { (request, response, error) -> Void in
+                                    print("Couldn't retrieve large image at \(cell)")
+                            })
+                    })
+                    
+                }
+                else {
+                    //                    print("Image was cached so just update the image")
+                    cell.posterImageView.setImageWithURLRequest(
+                        largeImageRequest,
+                        placeholderImage: smallImage,
+                        success: { (largeImageRequest, largeImageResponse, largeImage) -> Void in
+                            
+                            cell.posterImageView.image = largeImage
+                            
+                        },
+                        failure: { (request, response, error) -> Void in
+                            print("Couldn't retrieve large image at \(cell)")
+                    })
+                }
+                
+                
+            }, failure: { (request, response, error) -> Void in
+                print("Couldn't retrieve small image at \(cell)")
+        })
+        
+    }
+    
 }
 
-func loadImages (smallImageRequest: NSURLRequest, largeImageRequest: NSURLRequest, cell: MovieCollectionViewCell) {
-    
-    
-    cell.posterImageView.setImageWithURLRequest(
-        smallImageRequest,
-        placeholderImage: nil,
-        success: { (smallImageRequest, smallImageResponse, smallImage) -> Void in
-            
-            //image fading when cached/not cached
-            if smallImageResponse != nil {
-                //                    print("Image was NOT cached, fade in image")
-                cell.posterImageView.alpha = 0.0
-                cell.posterImageView.image = smallImage
-                
-                UIView.animateWithDuration(0.3, animations: { () -> Void in
-                    cell.posterImageView.alpha = 1.0
-                    }, completion: { (success) -> Void in
-                        
-                        cell.posterImageView.setImageWithURLRequest(
-                            largeImageRequest,
-                            placeholderImage: smallImage,
-                            success: { (largeImageRequest, largeImageResponse, largeImage) -> Void in
-                                
-                                cell.posterImageView.image = largeImage
-                                
-                            },
-                            failure: { (request, response, error) -> Void in
-                                print("Couldn't retrieve large image at \(cell)")
-                        })
-                })
-                
-            }
-            else {
-                //                    print("Image was cached so just update the image")
-                cell.posterImageView.setImageWithURLRequest(
-                    largeImageRequest,
-                    placeholderImage: smallImage,
-                    success: { (largeImageRequest, largeImageResponse, largeImage) -> Void in
-                        
-                        cell.posterImageView.image = largeImage
-                        
-                    },
-                    failure: { (request, response, error) -> Void in
-                        print("Couldn't retrieve large image at \(cell)")
-                })
-            }
-            
-    
-        }, failure: { (request, response, error) -> Void in
-            print("Couldn't retrieve small image at \(cell)")
-    })
-    
-}
+
